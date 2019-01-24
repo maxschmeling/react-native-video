@@ -33,7 +33,8 @@ static int const RCTVideoUnset = -1;
   BOOL _playerLayerObserverSet;
   RCTVideoPlayerViewController *_playerViewController;
   NSURL *_videoURL;
-  
+  UIView *_subview;
+
   /* Required to publish events */
   RCTEventDispatcher *_eventDispatcher;
   BOOL _playbackRateObserverRegistered;
@@ -138,6 +139,13 @@ static int const RCTVideoUnset = -1;
     viewController.view.frame = self.bounds;
     viewController.player = player;
     viewController.view.frame = self.bounds;
+
+    if (_subview) {
+      [viewController.contentOverlayView addSubview:_subview];
+      viewController.contentOverlayView.frame = self.bounds;
+      _subview.frame = self.bounds;
+    }
+
     return viewController;
 }
 
@@ -1334,6 +1342,8 @@ static int const RCTVideoUnset = -1;
 
 - (void)insertReactSubview:(UIView *)view atIndex:(NSInteger)atIndex
 {
+  _subview = view;
+
   // We are early in the game and somebody wants to set a subview.
   // That can only be in the context of playerViewController.
   if( !_controls && !_playerLayer && !_playerViewController )
@@ -1345,6 +1355,8 @@ static int const RCTVideoUnset = -1;
   {
     view.frame = self.bounds;
     [_playerViewController.contentOverlayView insertSubview:view atIndex:atIndex];
+    _playerViewController.contentOverlayView.frame = self.bounds;
+    _subview.frame = self.bounds;
   }
   else
   {
