@@ -29,8 +29,6 @@ static int const RCTVideoUnset = -1;
   NSDictionary *_source;
   BOOL _playerItemObserversSet;
   BOOL _playerBufferEmpty;
-  AVPlayerLayer *_playerLayer;
-  BOOL _playerLayerObserverSet;
   RCTVideoPlayerViewController *_playerViewController;
   NSURL *_videoURL;
   
@@ -194,7 +192,6 @@ static int const RCTVideoUnset = -1;
 - (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-  [self removePlayerLayer];
   [self removePlayerItemObservers];
   [_player removeObserver:self forKeyPath:playbackRate context:nil];
 }
@@ -209,20 +206,9 @@ static int const RCTVideoUnset = -1;
   [_player setRate:0.0];
 }
 
-- (void)applicationDidEnterBackground:(NSNotification *)notification
-{
-  if (_playInBackground) {
-    // Needed to play sound in background. See https://developer.apple.com/library/ios/qa/qa1668/_index.html
-    [_playerLayer setPlayer:nil];
-  }
-}
-
 - (void)applicationWillEnterForeground:(NSNotification *)notification
 {
   [self applyModifiers];
-  if (_playInBackground) {
-    [_playerLayer setPlayer:_player];
-  }
 }
 
 #pragma mark - Audio events
@@ -331,7 +317,6 @@ static int const RCTVideoUnset = -1;
 - (void)setSrc:(NSDictionary *)source
 {
   _source = source;
-  [self removePlayerLayer];
   [self removePlayerTimeObserver];
   [self removePlayerItemObservers];
 
@@ -655,12 +640,6 @@ static int const RCTVideoUnset = -1;
       _playerBufferEmpty = NO;
       self.onVideoBuffer(@{@"isBuffering": @(NO), @"target": self.reactTag});
     }
-  } else if (object == _playerLayer) {
-    if([keyPath isEqualToString:readyForDisplayKeyPath] && [change objectForKey:NSKeyValueChangeNewKey]) {
-      if([change objectForKey:NSKeyValueChangeNewKey] && self.onReadyForDisplay) {
-        self.onReadyForDisplay(@{@"target": self.reactTag});
-      }
-    }
   } else if (object == _player) {
     if([keyPath isEqualToString:playbackRate]) {
       if(self.onPlaybackRateChange) {
@@ -753,14 +732,7 @@ static int const RCTVideoUnset = -1;
 
 - (void)setResizeMode:(NSString*)mode
 {
-  if( _controls )
-  {
-    _playerViewController.videoGravity = mode;
-  }
-  else
-  {
-    _playerLayer.videoGravity = mode;
-  }
+  _playerViewController.videoGravity = mode;
   _resizeMode = mode;
 }
 
@@ -1218,41 +1190,14 @@ static int const RCTVideoUnset = -1;
   }
 }
 
-- (void)usePlayerLayer
-{
-  if( _player )
-  {
-    _playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
-    _playerLayer.frame = self.bounds;
-    _playerLayer.needsDisplayOnBoundsChange = YES;
-    
-    // to prevent video from being animated when resizeMode is 'cover'
-    // resize mode must be set before layer is added
-    [self setResizeMode:_resizeMode];
-    [_playerLayer addObserver:self forKeyPath:readyForDisplayKeyPath options:NSKeyValueObservingOptionNew context:nil];
-    _playerLayerObserverSet = YES;
-    
-    [self.layer addSublayer:_playerLayer];
-    self.layer.needsDisplayOnBoundsChange = YES;
-  }
-}
-
 - (void)setControls:(BOOL)controls
 {
-  if( _controls != controls || (!_playerLayer && !_playerViewController) )
-  {
-    _controls = controls;
-    if( _controls )
-    {
-      [self removePlayerLayer];
-      [self usePlayerViewController];
-    }
-    else
-    {
-      [_playerViewController.view removeFromSuperview];
-      _playerViewController = nil;
-      [self usePlayerLayer];
-    }
+  _controls = controls;
+
+  if (_playerViewController == nil) {
+    [self usePlayerViewController];
+  } else {
+    _playerViewController.showsPlaybackControls = _controls;
   }
 }
 
@@ -1264,16 +1209,6 @@ static int const RCTVideoUnset = -1;
     [self removePlayerTimeObserver];
     [self addPlayerTimeObserver];
   }
-}
-
-- (void)removePlayerLayer
-{
-  [_playerLayer removeFromSuperlayer];
-  if (_playerLayerObserverSet) {
-    [_playerLayer removeObserver:self forKeyPath:readyForDisplayKeyPath];
-    _playerLayerObserverSet = NO;
-  }
-  _playerLayer = nil;
 }
 
 #pragma mark - RCTVideoPlayerViewControllerDelegate
@@ -1334,56 +1269,23 @@ static int const RCTVideoUnset = -1;
 
 - (void)insertReactSubview:(UIView *)view atIndex:(NSInteger)atIndex
 {
-  // We are early in the game and somebody wants to set a subview.
-  // That can only be in the context of playerViewController.
-  if( !_controls && !_playerLayer && !_playerViewController )
-  {
-    [self setControls:true];
-  }
-  
-  if( _controls )
-  {
-    view.frame = self.bounds;
-    [_playerViewController.contentOverlayView insertSubview:view atIndex:atIndex];
-  }
-  else
-  {
-    RCTLogError(@"video cannot have any subviews");
-  }
-  return;
+  view.frame = self.bounds;
+  [_playerViewController.contentOverlayView insertSubview:view atIndex:atIndex];
 }
 
 - (void)removeReactSubview:(UIView *)subview
 {
-  if( _controls )
-  {
-    [subview removeFromSuperview];
-  }
-  else
-  {
-    RCTLogError(@"video cannot have any subviews");
-  }
-  return;
+  [subview removeFromSuperview];
 }
 
 - (void)layoutSubviews
 {
   [super layoutSubviews];
-  if( _controls )
-  {
-    _playerViewController.view.frame = self.bounds;
+  _playerViewController.view.frame = self.bounds;
     
-    // also adjust all subviews of contentOverlayView
-    for (UIView* subview in _playerViewController.contentOverlayView.subviews) {
-      subview.frame = self.bounds;
-    }
-  }
-  else
-  {
-    [CATransaction begin];
-    [CATransaction setAnimationDuration:0];
-    _playerLayer.frame = self.bounds;
-    [CATransaction commit];
+  // also adjust all subviews of contentOverlayView
+  for (UIView* subview in _playerViewController.contentOverlayView.subviews) {
+    subview.frame = self.bounds;
   }
 }
 
@@ -1401,8 +1303,6 @@ static int const RCTVideoUnset = -1;
     _isExternalPlaybackActiveObserverRegistered = NO;
   }
   _player = nil;
-  
-  [self removePlayerLayer];
   
   [_playerViewController.view removeFromSuperview];
   _playerViewController = nil;
