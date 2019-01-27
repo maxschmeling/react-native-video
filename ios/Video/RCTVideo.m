@@ -108,10 +108,10 @@ static int const RCTVideoUnset = -1;
                                                  name:UIApplicationWillResignActiveNotification
                                                object:nil];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(applicationDidEnterBackground:)
-                                                 name:UIApplicationDidEnterBackgroundNotification
-                                               object:nil];
+    // [[NSNotificationCenter defaultCenter] addObserver:self
+    //                                          selector:@selector(applicationDidEnterBackground:)
+    //                                              name:UIApplicationDidEnterBackgroundNotification
+    //                                            object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(applicationWillEnterForeground:)
