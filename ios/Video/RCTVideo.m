@@ -818,11 +818,11 @@ static int const RCTVideoUnset = -1;
 }
 
 - (void)setupPipController {
-  if (!_pipController && _playerLayer && [AVPictureInPictureController isPictureInPictureSupported]) {
-    // Create new controller passing reference to the AVPlayerLayer
-    _pipController = [[AVPictureInPictureController alloc] initWithPlayerLayer:_playerLayer];
-    _pipController.delegate = self;
-  }
+  // if (!_pipController && _playerLayer && [AVPictureInPictureController isPictureInPictureSupported]) {
+  //   // Create new controller passing reference to the AVPlayerLayer
+  //   _pipController = [[AVPictureInPictureController alloc] initWithPlayerLayer:_playerLayer];
+  //   _pipController.delegate = self;
+  // }
 }
 
 - (void)setIgnoreSilentSwitch:(NSString *)ignoreSilentSwitch
@@ -1265,23 +1265,23 @@ static int const RCTVideoUnset = -1;
 
 - (void)usePlayerLayer
 {
-  if( _player )
-  {
-    _playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
-    _playerLayer.frame = self.bounds;
-    _playerLayer.needsDisplayOnBoundsChange = YES;
+  // if( _player )
+  // {
+  //   _playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
+  //   _playerLayer.frame = self.bounds;
+  //   _playerLayer.needsDisplayOnBoundsChange = YES;
     
-    // to prevent video from being animated when resizeMode is 'cover'
-    // resize mode must be set before layer is added
-    [self setResizeMode:_resizeMode];
-    [_playerLayer addObserver:self forKeyPath:readyForDisplayKeyPath options:NSKeyValueObservingOptionNew context:nil];
-    _playerLayerObserverSet = YES;
+  //   // to prevent video from being animated when resizeMode is 'cover'
+  //   // resize mode must be set before layer is added
+  //   [self setResizeMode:_resizeMode];
+  //   [_playerLayer addObserver:self forKeyPath:readyForDisplayKeyPath options:NSKeyValueObservingOptionNew context:nil];
+  //   _playerLayerObserverSet = YES;
     
-    [self.layer addSublayer:_playerLayer];
-    self.layer.needsDisplayOnBoundsChange = YES;
+  //   [self.layer addSublayer:_playerLayer];
+  //   self.layer.needsDisplayOnBoundsChange = YES;
 
-    [self setupPipController];
-  }
+  //   [self setupPipController];
+  // }
 }
 
 - (void)setControls:(BOOL)controls
