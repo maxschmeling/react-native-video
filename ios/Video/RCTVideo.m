@@ -1427,8 +1427,6 @@ static int const RCTVideoUnset = -1;
   }
   _player = nil;
   
-  [self removePlayerLayer];
-  
   [_playerViewController.contentOverlayView removeObserver:self forKeyPath:@"frame"];
   [_playerViewController.view removeFromSuperview];
   _playerViewController = nil;
