@@ -210,6 +210,7 @@ static int const RCTVideoUnset = -1;
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [self removePlayerItemObservers];
+  [self removePlayerRef];
   [_player removeObserver:self forKeyPath:playbackRate context:nil];
   [_player removeObserver:self forKeyPath:externalPlaybackActive context: nil];
 }
@@ -338,6 +339,17 @@ static int const RCTVideoUnset = -1;
   }
 }
 
+- (void)removePlayerRef
+{
+  if (_playerViewController != nil) {
+    _playerViewController.player = nil;
+  }
+
+  if (_playerLayer != nil) {
+    _playerLayer.player = nil;
+  }
+}
+
 #pragma mark - Player and source
 
 - (void)setSrc:(NSDictionary *)source
@@ -345,6 +357,7 @@ static int const RCTVideoUnset = -1;
   _source = source;
   [self removePlayerTimeObserver];
   [self removePlayerItemObservers];
+  [self removePlayerRef];
 
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t) 0), dispatch_get_main_queue(), ^{
 
@@ -1433,6 +1446,7 @@ static int const RCTVideoUnset = -1;
   
   [self removePlayerTimeObserver];
   [self removePlayerItemObservers];
+  [self removePlayerRef];
   
   _eventDispatcher = nil;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
