@@ -344,10 +344,6 @@ static int const RCTVideoUnset = -1;
   if (_playerViewController != nil) {
     _playerViewController.player = nil;
   }
-
-  if (_playerLayer != nil) {
-    _playerLayer.player = nil;
-  }
 }
 
 #pragma mark - Player and source
