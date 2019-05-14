@@ -1287,11 +1287,9 @@ static int const RCTVideoUnset = -1;
     // resize mode must be set before subview is added
     [self setResizeMode:_resizeMode];
     
-    if (_controls) {
-      UIViewController *viewController = [self reactViewController];
-      [viewController addChildViewController:_playerViewController];
-      [self addSubview:_playerViewController.view];
-    }
+    UIViewController *viewController = [self reactViewController];
+    [viewController addChildViewController:_playerViewController];
+    [self addSubview:_playerViewController.view];
     
     [_playerViewController.contentOverlayView addObserver:self forKeyPath:@"frame" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:NULL];
   }
